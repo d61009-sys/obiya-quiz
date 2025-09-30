@@ -1,0 +1,77 @@
+/* style.css */
+
+body {
+    font-family: sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 16px;
+    background-color: #f4f4f4;
+}
+
+/* 画面切り替えのスタイル */
+.screen {
+    display: none;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 15px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.screen.active {
+    display: block; /* activeクラスがある画面のみ表示 */
+}
+
+h1, h2 {
+    color: #cc3300; /* 高知らしい赤系の色 */
+}
+
+/* 選択ボタンのスタイル */
+button {
+    display: block;
+    width: 100%;
+    padding: 18px 0;
+    margin: 10px 0;
+    font-size: 1.15em;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.select-button {
+    background-color: #33aaff; /* 青系 */
+    color: white;
+}
+
+.select-button:hover {
+    background-color: #0077cc;
+}
+
+/* 選択肢ボタンのスタイル */
+.option-button {
+    background-color: #ff9900; /* オレンジ系 */
+    color: white;
+}
+
+.option-button:hover {
+    background-color: #cc7a00;
+}
+
+/* リスタートボタンのスタイル */
+#restart-button {
+    background-color: #66cc66; /* 緑系 */
+    color: white;
+}
+
+#restart-button:hover {
+    background-color: #44aa44;
+}
+
+/* 音声コントロールのスタイル調整 */
+#quiz-audio {
+    width: 100%;
+    max-width: 90%; /* 必要に応じて調整 */
+    margin: 10px auto;
+}
