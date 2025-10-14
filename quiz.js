@@ -12,7 +12,8 @@ const QUIZ_DATA = [
             'コピー機'
         ],
         answer: '印刷機',
-        type: 'text' // 問題タイプ
+        audio_src: 'assets/audio/quiz_1_sound.mp3', 
+        type: 'audio'
     },
     {
         id: 'quiz_2',
@@ -25,7 +26,7 @@ const QUIZ_DATA = [
             'メジロ'
         ],
         answer: 'インコ(メガネの門田)',
-        audio_src: 'assets/audio/quiz_sound_1.mp3', // 音声ファイルのパス
+        audio_src: 'assets/audio/quiz_2_sound.mp3', // 音声ファイルのパス
         type: 'audio' // 問題タイプ
     },
     {
@@ -39,7 +40,8 @@ const QUIZ_DATA = [
             '3'
         ],
         answer: '2',
-        type: 'text'
+        audio_src: 'assets/audio/quiz_3_sound.mp3', 
+        type: 'audio'
     },
     {
         id: 'quiz_4',
@@ -52,7 +54,8 @@ const QUIZ_DATA = [
             '2'
         ],
         answer: 'ヤマサキ洋装店',
-        type: 'text'
+        audio_src: 'assets/audio/quiz_4_sound.mp3', 
+        type: 'audio'
     },
     {
         id: 'quiz_5',
@@ -65,7 +68,8 @@ const QUIZ_DATA = [
             '3'
         ],
         answer: '1',
-        type: 'text'
+        audio_src: 'assets/audio/quiz_5_sound.mp3', 
+        type: 'audio'
     }
 ];
 
