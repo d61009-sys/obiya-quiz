@@ -5,14 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>帯屋町筋クイズ</title>
     <link rel="stylesheet" href="style.css">
-</head>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="gas-integration.js"></script> </head>
 <body>
 
     <div id="start-screen" class="screen active">
         <h1>帯屋町筋クイズに挑戦！</h1>
-        <p>ポスターにある5つのクイズから、挑戦したいクイズを一つ選んでください！</p>
-        <div id="quiz-selection-buttons">
-            </div>
+        <p>今日このクイズに参加した人数：<span id="counter-quiz">---</span>人</p>
+        
+        <p>ポスターのクイズを解き始めるには、下のボタンを押してください！</p>
+        <button id="start-quiz-button">クイズを始める</button>
     </div>
 
     <div id="quiz-screen" class="screen">
@@ -24,13 +28,13 @@
         </div>
 
         <div id="options-container">
-            </div>
+        </div>
     </div>
 
     <div id="result-screen" class="screen">
         <h2 id="result-message"></h2>
         <p>お疲れ様でした！</p>
-        <button id="restart-button">別のクイズに挑戦する</button>
+        <button id="restart-button">参加人数画面に戻る</button>
     </div>
 
     <script src="quiz.js"></script>
@@ -39,8 +43,15 @@
         const startScreen = document.getElementById('start-screen');
         const quizScreen = document.getElementById('quiz-screen');
         const resultScreen = document.getElementById('result-screen');
-        const selectionButtonsContainer = document.getElementById('quiz-selection-buttons');
+        // const selectionButtonsContainer = document.getElementById('quiz-selection-buttons'); // 削除
+        const startQuizButton = document.getElementById('start-quiz-button');
         const restartButton = document.getElementById('restart-button');
+        
+        // ★★★ GAS連携のURLとクイズIDを定義 ★★★
+        // 5つの独立したクイズファイルでそれぞれこの値を変更する必要があります！
+        // 例えば、quiz1のindex.htmlでは ID を 'quiz_1' に固定します。
+        const TARGET_QUIZ_ID = 'quiz_1'; 
+        const selectedQuiz = QUIZ_DATA.find(q => q.id === TARGET_QUIZ_ID);
 
         // 画面切り替え関数
         function showScreen(screenId) {
@@ -50,31 +61,80 @@
             document.getElementById(screenId).classList.add('active');
         }
 
-        // 選択ボタンの初期表示
-        function renderSelectionButtons() {
-            selectionButtonsContainer.innerHTML = ''; // ボタンをクリア
-            QUIZ_DATA.forEach(quiz => {
-                const button = document.createElement('button');
-                button.textContent = quiz.title;
-                button.classList.add('select-button');
-                button.onclick = () => startQuiz(quiz.id);
-                selectionButtonsContainer.appendChild(button);
-            });
-            showScreen('start-screen');
+        // --- GAS連携関数（quiz.jsで定義せず、ここで簡略的に定義） ---
+        
+        // ★★★ GASのウェブアプリのURLに置き換えてください ★★★
+        // 実際は gas-integration.js に定義しますが、ここでは仮で配置
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzdT8j34I3GE8bFct4ZgfHDwjFpIqQflww0wLiR-DJXNIG6gN-KgY9ed2ReJ1PVnukB/exec
+"; 
+        
+        /**
+         * 参加人数をスプレッドシートから読み込み、HTMLに表示する
+         */
+        function displayCounter() {
+            const counterKey = TARGET_QUIZ_ID.replace('_', '') + '_count';
+            const counterElement = document.getElementById('counter-quiz');
+            if (!counterElement) return;
+            
+            fetch(`${GAS_API_URL}?quizId=${counterKey}&method=get`)
+                .then(response => response.json())
+                .then(data => {
+                    const count = data[counterKey];
+                    if (count !== undefined) {
+                        counterElement.textContent = count;
+                    } else {
+                        counterElement.textContent = '取得エラー';
+                    }
+                })
+                .catch(error => {
+                    console.error("GAS読み込みエラー:", error);
+                    counterElement.textContent = '通信エラー';
+                });
         }
 
-        // クイズ開始
-        function startQuiz(quizId) {
-            selectedQuiz = QUIZ_DATA.find(q => q.id === quizId);
+        /**
+         * 参加人数を+1してスプレッドシートに書き込む
+         */
+        async function incrementCounter() {
+            const counterKey = TARGET_QUIZ_ID.replace('_', '') + '_count';
+            
+            try {
+                const response = await fetch(GAS_API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams({
+                        quizId: counterKey,
+                        method: 'post'
+                    })
+                });
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    console.log(`Counter incremented to: ${result.newCount}`);
+                    // カウントアップ成功後、画面上の人数をすぐに更新
+                    document.getElementById('counter-quiz').textContent = result.newCount; 
+                } else {
+                    console.error("GAS更新失敗:", result.message);
+                }
+            } catch (error) {
+                console.error("GAS更新通信エラー:", error);
+            }
+        }
+        // -----------------------------------------------------------------
 
+
+        // クイズ開始
+        function startQuiz() {
             if (!selectedQuiz) return;
+
+            // ★★★ 修正: クイズ画面に遷移する直前に、カウンターを+1する ★★★
+            incrementCounter();
 
             // クイズ画面の要素を更新
             document.getElementById('quiz-title').textContent = selectedQuiz.title;
             document.getElementById('question-text').textContent = selectedQuiz.question;
             
             const optionsContainer = document.getElementById('options-container');
-            optionsContainer.innerHTML = ''; // 選択肢をクリア
+            optionsContainer.innerHTML = '';
 
             // 音声問題の対応
             const audioContainer = document.getElementById('audio-container');
@@ -83,7 +143,7 @@
             if (selectedQuiz.type === 'audio' && selectedQuiz.audio_src) {
                 audioContainer.style.display = 'block';
                 quizAudio.src = selectedQuiz.audio_src;
-                quizAudio.load(); // 音声ファイルをロード
+                quizAudio.load();
             } else {
                 audioContainer.style.display = 'none';
                 quizAudio.src = '';
@@ -105,12 +165,17 @@
         function checkAnswer(selectedOption) {
             const isCorrect = (selectedOption === selectedQuiz.answer);
             const messageElement = document.getElementById('result-message');
+            
+            // 音声を停止
+            const quizAudio = document.getElementById('quiz-audio');
+            quizAudio.pause();
+            quizAudio.currentTime = 0;
 
             if (isCorrect) {
                 messageElement.textContent = '🎉 正解です！帯屋町マニア！';
                 messageElement.style.color = 'green';
             } else {
-                messageElement.textContent = '残念！もう一度挑戦してみましょう...';
+                messageElement.textContent = `残念！正解は「${selectedQuiz.answer}」でした。`;
                 messageElement.style.color = 'red';
             }
 
@@ -119,10 +184,19 @@
         }
 
         // リスタート（選択画面へ戻る）ボタンの設定
-        restartButton.onclick = renderSelectionButtons;
+        restartButton.onclick = () => {
+            showScreen('start-screen');
+            displayCounter(); // 人数を再表示
+        };
 
         // 初期化処理
-        document.addEventListener('DOMContentLoaded', renderSelectionButtons);
+        document.addEventListener('DOMContentLoaded', () => {
+            // ★ 初期画面ロード時に人数を読み込む
+            displayCounter();
+            
+            // ★ クイズを始めるボタンにイベントを設定
+            startQuizButton.onclick = startQuiz;
+        });
     </script>
 </body>
 </html>
